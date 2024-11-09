@@ -18,7 +18,7 @@ async def check_title(data=Body()):
     try:
         input_title = str(data["title"])
         file_bytes = data["file"]["buffer"]["data"]
-        return check_if_text_in_docx(input_title, file_bytes)
+        return check_if_text_in_docx(input_title, file_bytes, "Проверка наименования выполнена успешно")
     except Exception as ex:
         print(ex)
 
