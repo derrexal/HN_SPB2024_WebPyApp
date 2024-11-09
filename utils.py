@@ -3,8 +3,13 @@ from io import BytesIO
 from const import message_ok, mostly_correct, should_be_checked
 from fuzzywuzzy import fuzz, process
 from docx import Document
+from transformers import pipeline
 import pandas as pd
 import json
+
+
+def retrieve_delivery_time(pipe: pipeline, context: str) -> dict:
+    return pipe(question='Какой срок поставки товара?', context=context)
 
 
 def extract_table(file_bytes: str, table_num: int = 0) -> pd.DataFrame:
