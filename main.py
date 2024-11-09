@@ -15,26 +15,33 @@ async def default_endpoint():
 @app.post("/api/check_title")
 async def check_title(data=Body()):
     """Проверка наименования"""
-    input_title = data["title"]
-    file_bytes = str(data["file"])
-    return check_title_function(input_title, file_bytes)
+    try:
+        input_title = data["title"]
+        file_bytes = str(data["file"])
+        return check_title_function(input_title, file_bytes)
+    except Exception as ex:
+        print(ex)
 
 
 @app.post("/api/check_contract_enforced")
 async def check_contract_enforced(data=Body()):
     """Проверка обеспечения исполнения контракта"""
-    contract_enforced = data["contract_enforced"]
-    file_bytes = str(data["file_bytes"])
-    return check_contract_enforced_function(contract_enforced, file_bytes)
-
+    try:
+        contract_enforced = data["contractEnforced"]
+        file_bytes = str(data["file"])
+        return check_contract_enforced_function(contract_enforced, file_bytes)
+    except Exception as ex:
+        print(ex)
 
 @app.post("/api/check_photo")
 async def check_photo(data=Body()):
     """Проверка фото"""
-    photo_url = data["photo_url"]
-    file_bytes = str(data["file"])
-    return check_photo_function(photo_url, file_bytes)
-
+    try:
+        photo_url = data["image"]
+        file_bytes = str(data["file"])
+        return check_photo_function(photo_url, file_bytes)
+    except Exception as ex:
+        print(ex)
 
 async def run():
     config = uvicorn.Config("main:app", host="127.0.0.1", port=5300, log_level="info", loop="none")
