@@ -3,6 +3,7 @@ from fastapi import FastAPI, Body
 import uvicorn
 from app import *
 from checks import check_if_text_in_docx
+# from ruclip_check_photo import check_photo_function
 
 app = FastAPI()
 
@@ -18,7 +19,7 @@ async def check_title(data=Body()):
     try:
         input_title = str(data["title"])
         file_bytes = data["file"]["buffer"]["data"]
-        return check_if_text_in_docx(input_title, file_bytes, "Проверка наименования выполнена успешно")
+        return check_if_text_in_docx(input_title, file_bytes)
     except Exception as ex:
         print(ex)
 
@@ -37,10 +38,13 @@ async def check_contract_enforced(data=Body()):
 async def check_photo(data=Body()):
     """Проверка фото"""
     try:
-        photo_url = str(data["specifications"])
-        return check_photo_function(photo_url)
+        specifications = data["specifications"]
+        photos = [{'photo_url': item['image'], 'name': item['title']} for item in specifications]
+        ret
+        # return check_photo_function(photos)
     except Exception as ex:
         print(ex)
+
 
 async def run():
     config = uvicorn.Config("main:app", host="127.0.0.1", port=5300, log_level="info", loop="none")

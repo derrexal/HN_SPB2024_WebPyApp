@@ -5,7 +5,7 @@ import pandas as pd
 from utils import get_verdict, fuzzy_sim, find_product_name, extract_table, extract_text_from_docx
 
 
-def check_if_text_in_docx(text: str, file_bytes: list[int], message: str):
+def check_if_text_in_docx(text: str, file_bytes: list[int]):
     """
     Ищет в тексте `docx_text` поданный текст.
     Возвращает Ok, если совпадение больше или равно 90,
@@ -17,7 +17,7 @@ def check_if_text_in_docx(text: str, file_bytes: list[int], message: str):
     docx_text = extract_text_from_docx(file_bytes)
     score = fuzz.partial_ratio(text.lower(), docx_text)
     if score >= 90:
-        return {'plausibility': score, 'message': message}
+        return {'plausibility': score, 'message': f'Наименование совпадает на {score} %'}
     elif 90 > score >= 70:
         return {'plausibility': score, 'message': mostly_correct}
     else:
