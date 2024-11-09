@@ -2,11 +2,9 @@ import asyncio
 from fastapi import FastAPI, Body
 import uvicorn
 from app import *
+from checks import check_if_text_in_docx
 
 app = FastAPI()
-
-
-#        file_bytes = str(data["file"])
 
 
 @app.get("/api/")
@@ -19,7 +17,8 @@ async def check_title(data=Body()):
     """Проверка наименования"""
     try:
         input_title = str(data["title"])
-        return check_title_function(input_title)
+        file_bytes = data["file"]["buffer"]["data"]
+        return check_if_text_in_docx(input_title, file_bytes)
     except Exception as ex:
         print(ex)
 
