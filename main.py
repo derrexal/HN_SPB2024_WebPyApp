@@ -6,19 +6,20 @@ from app import *
 app = FastAPI()
 
 
+#        file_bytes = str(data["file"])
+
+
 @app.get("/api/")
 async def default_endpoint():
-    """Этот эндпоинт просто возвращает текст по запросу"""
-    return default_function_first()
+    return "Hello, i'm python web app"
 
 
 @app.post("/api/check_title")
 async def check_title(data=Body()):
     """Проверка наименования"""
     try:
-        input_title = data["title"]
-        file_bytes = str(data["file"])
-        return check_title_function(input_title, file_bytes)
+        input_title = str(data["title"])
+        return check_title_function(input_title)
     except Exception as ex:
         print(ex)
 
@@ -27,19 +28,18 @@ async def check_title(data=Body()):
 async def check_contract_enforced(data=Body()):
     """Проверка обеспечения исполнения контракта"""
     try:
-        contract_enforced = data["contractEnforced"]
-        file_bytes = str(data["file"])
-        return check_contract_enforced_function(contract_enforced, file_bytes)
+        contract_enforced = str(data["contractEnforced"])
+        return check_contract_enforced_function(contract_enforced)
     except Exception as ex:
         print(ex)
+
 
 @app.post("/api/check_photo")
 async def check_photo(data=Body()):
     """Проверка фото"""
     try:
-        photo_url = data["specifications"]
-        file_bytes = str(data["file"])
-        return check_photo_function(photo_url, file_bytes)
+        photo_url = str(data["specifications"])
+        return check_photo_function(photo_url)
     except Exception as ex:
         print(ex)
 
