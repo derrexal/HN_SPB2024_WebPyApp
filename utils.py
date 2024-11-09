@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from const import message_ok, mostly_correct, should_be_checked
 from fuzzywuzzy import fuzz, process
 from docx import Document
@@ -100,8 +102,8 @@ def get_verdict(x: int):
         return should_be_checked
 
 
-def extract_text_from_docx(docx_file: str):
-    doc = Document(docx_file)
+def extract_text_from_docx(docx_file: list[int]):
+    doc = Document(BytesIO(bytearray(docx_file)))
     full_text = []
     for para in doc.paragraphs:
         full_text.append(para.text)

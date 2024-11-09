@@ -5,7 +5,7 @@ import pandas as pd
 from utils import get_verdict, fuzzy_sim, find_product_name, extract_table, extract_text_from_docx
 
 
-def check_if_text_in_docx(text: str, file_bytes: str):
+def check_if_text_in_docx(text: str, file_bytes: list[int]):
     """
     Ищет в тексте `docx_text` поданный текст.
     Возвращает Ok, если совпадение больше или равно 90,
