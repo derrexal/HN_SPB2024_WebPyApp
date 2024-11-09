@@ -37,7 +37,7 @@ async def check_contract_enforced(data=Body()):
 async def check_photo(data=Body()):
     """Проверка фото"""
     try:
-        photo_url = data["image"]
+        photo_url = data["specifications"]
         file_bytes = str(data["file"])
         return check_photo_function(photo_url, file_bytes)
     except Exception as ex:
