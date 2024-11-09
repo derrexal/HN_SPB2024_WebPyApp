@@ -3,6 +3,7 @@ from fastapi import FastAPI, Body
 import uvicorn
 from app import *
 from checks import check_if_text_in_docx
+# from transformers import pipeline
 
 app = FastAPI()
 

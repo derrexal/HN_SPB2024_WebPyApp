@@ -94,8 +94,9 @@ def find_product_name(product_item: str, data: pd.DataFrame, column: str='Наи
         return "None"
 
 
-def fuzzy_sim(str1: str, str2: str):
-    return fuzz.partial_ratio(str1, str2)
+def fuzzy_sim(str1: str, str2: str) -> int:
+    """Возвращает скор по схожести"""
+    return fuzz.partial_ratio(str1.lower(), str2.lower())
 
 
 def get_verdict(x: int):

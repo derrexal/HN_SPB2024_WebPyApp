@@ -2,7 +2,22 @@ from const import message_ok, should_be_checked, mostly_correct
 from fuzzywuzzy import fuzz, process
 import pandas as pd
 
-from utils import get_verdict, fuzzy_sim, find_product_name, extract_table, extract_text_from_docx
+from utils import get_verdict, fuzzy_sim, find_product_name, extract_table, extract_text_from_docx, retrieve_delivery_time
+
+
+def check_delivery_address(pipe, text: str, docx_text: str, message: str):
+    """
+    Возвращает Ок, если График поставки в основном совпадает
+    с информацией в ТЗ.
+    """
+    answer = retrieve_delivery_time(pipe, docx_text)['answer']
+    score = fuzzy_sim(text, answer)
+    if score >= 90:
+        return {'plausibility': score, 'message': message}
+    elif 90 > score >= 70:
+        return {'plausibility': score, 'message': mostly_correct}
+    else:
+        return {'plausibility': score, 'message': should_be_checked}
 
 
 def check_if_text_in_docx(text: str, file_bytes: list[int], message: str):
