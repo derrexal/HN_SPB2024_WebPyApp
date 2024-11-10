@@ -57,6 +57,23 @@ async def check_quantity(file: Annotated[bytes, File()], id: str):
         print(ex)
 
 
+@app.post("/api/check_characteristic")
+async def check_characteristic(file: Annotated[bytes, File()], id: str):
+    """
+    Проверка того, что количество товаров в КС
+    соответствует количеству в ТЗ
+    """
+    try:
+        response = requests.get(
+            f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
+        )
+        data = json.loads(response.text)
+        product_items = data['items']
+        return check_item_quantity(product_items, file)
+    except Exception as ex:
+        print(ex)
+
+
 @app.post("/api/check_contract_enforced")
 async def check_contract_enforced(file: Annotated[bytes, File()], id: str):
     """Проверка обеспечения исполнения контракта"""
