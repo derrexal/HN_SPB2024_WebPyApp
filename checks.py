@@ -2,7 +2,7 @@ from const import message_ok, should_be_checked, mostly_correct
 from fuzzywuzzy import fuzz, process
 
 from utils import get_verdict, fuzzy_sim, extract_table, extract_text_from_docx, \
-    retrieve_delivery_time, df_to_list_of_string, save_as_doc
+    retrieve_delivery_time, df_to_list_of_string, save_as_doc, extract_tables
 
 from transformers import pipeline
 
@@ -77,12 +77,18 @@ def check_if_products_in_docx(items: list[str], file_bytes: bytes) -> str:
 
 def check_item_quantity(product_items: list, file_bytes: bytes):
     """Проверяет """
-    docx_table = extract_table(file_bytes, 0)
-    if docx_table is None:
+    docx_tables = extract_tables(file_bytes)
+    if docx_tables is None:
         return {'message': 'Пожалуйста, загрузите файл формата docx', 'status': 2}  # 2 - плохо
 
+    char_errors = {}
+    # doc_items = df_to_list_of_string(docx_table)
+    merged_tables = []
+    for t in docx_tables:
+        merged_tables.extend(df_to_list_of_string(t))
+
     quant_errors = []
-    doc_items = df_to_list_of_string(docx_table)
+    doc_items = df_to_list_of_string(merged_tables)
     for item in product_items:
         item_name = item['name']
         item_quant = str(item['currentValue']) + ' ' + item['okeiName']
@@ -98,17 +104,22 @@ def check_item_quantity(product_items: list, file_bytes: bytes):
 
 
 def check_item_characteristics(product_items: list, file_bytes: bytes):
-    docx_table = extract_table(file_bytes, 0)
-    if docx_table is None:
+    # docx_table = extract_table(file_bytes, 0)
+    docx_tables = extract_tables(file_bytes)
+    if docx_tables is None:
         return {'message': 'Пожалуйста, загрузите файл формата docx', 'status': 2}  # 2 - плохо
 
     char_errors = {}
-    doc_items = df_to_list_of_string(docx_table)
+    # doc_items = df_to_list_of_string(docx_table)
+    merged_tables = []
+    for t in docx_tables:
+        merged_tables.extend(df_to_list_of_string(t))
+
     for item in product_items:
         item_errors = {}
         item_name = item['product_name']
         item_char = item['properties']
-        text, score = process.extractOne(item_name, doc_items)
+        text, score = process.extractOne(item_name, merged_tables)
         item_chars = [{d['name']: d['value']} for d in item_char]
         for item_char in item_chars:
             for ic in item_char:
