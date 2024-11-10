@@ -41,8 +41,6 @@ def check_if_text_in_docx(text: str, file_bytes: bytes):
 def check_if_products_in_docx(items: list[str], file_bytes: bytes) -> str:
     """Возвращает Ок, если все товары совпали."""
     data = extract_table(file_bytes)
-    if data == "":
-        return {'message': 'Пожалуйста, загрузите файл формата docx', 'status': 2}  # 2 - плохо
     data['score'] = data['Наименование товара'].apply(lambda x: process.extractOne(x, items)[1])
     data['verdict'] = data['score'].apply(get_verdict)
     if all(data['verdict'] == 'Ok'):
@@ -77,8 +75,6 @@ def check_if_products_in_docx(items: list[str], file_bytes: bytes) -> str:
 def check_item_quantity(product_items: list, file_bytes: bytes):
     """Проверяет """
     docx_table = extract_table(file_bytes, 0)
-    if docx_table == "":
-        return {'message': 'Пожалуйста, загрузите файл формата docx', 'status': 2} # 2 - плохо
     quant_errors = []
     doc_items = df_to_list_of_string(docx_table)
     for item in product_items:
@@ -97,8 +93,6 @@ def check_item_quantity(product_items: list, file_bytes: bytes):
 
 def check_item_characteristics(product_items: list, file_bytes: bytes):
     docx_table = extract_table(file_bytes, 0)
-    if docx_table == "":
-        return {'message': 'Пожалуйста, загрузите файл формата docx', 'status': 2}
     char_errors = []
     doc_items = df_to_list_of_string(docx_table)
     for item in product_items:
