@@ -6,6 +6,7 @@ from utils import get_verdict, fuzzy_sim, extract_table, extract_text_from_docx,
 
 from transformers import pipeline
 
+
 def check_delivery_address(pipe, text: str, docx_text: str, message: str):
     """
     Возвращает Ок, если График поставки в основном совпадает с информацией в ТЗ.
@@ -40,6 +41,8 @@ def check_if_text_in_docx(text: str, file_bytes: bytes):
 def check_if_products_in_docx(items: list[str], file_bytes: bytes) -> str:
     """Возвращает Ок, если все товары совпали."""
     data = extract_table(file_bytes)
+    if data == "":
+        return {'message': 'Пожалуйста, загрузите файл формата docx', 'status': 2}  # 2 - плохо
     data['score'] = data['Наименование товара'].apply(lambda x: process.extractOne(x, items)[1])
     data['verdict'] = data['score'].apply(get_verdict)
     if all(data['verdict'] == 'Ok'):
