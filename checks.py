@@ -27,17 +27,14 @@ def check_if_text_in_docx(text: str, file_bytes: list[int]):
     Возвращает Ok, если совпадение больше или равно 90,
     Mostly correct, если совпадение от 70 до 90
     И Text should be checked, если значение ниже 70.
-    
+
     Проверяется название КС в ТЗ и адрес в ТЗ
     """
     docx_text = extract_text_from_docx(file_bytes)
     score = fuzz.partial_ratio(text.lower(), docx_text)
-    if score >= 90:
-        return {'plausibility': score, 'message': f'Наименование совпадает на {score} %'}
-    elif 90 > score >= 70:
-        return {'plausibility': score, 'message': mostly_correct}
-    else:
-        return {'plausibility': score, 'message': should_be_checked}
+
+    return {'plausibility': score, 'message': f'Наименование совпадает на {score} %'}
+
 
 
 def check_if_products_in_docx(items: list[str], file_bytes: str) -> str:
@@ -74,6 +71,7 @@ def check_if_quantity_in_docx(product_items: list, data: pd.DataFrame):
 
 
 def check_item_quantity(product_items: list, file_bytes: str):
+    """"""
     docx_table = extract_table(file_bytes, 0)
     quant_errors = []
     doc_items = df_to_list_of_string(docx_table)
@@ -86,6 +84,6 @@ def check_item_quantity(product_items: list, file_bytes: str):
             quant_errors.append((item_name, item_quant))
 
     if len(quant_errors) == 0:
-        return {'message': 'Ok', 'additional_info': quant_errors}
+        return {'message': 'Количество товаров и характеристик в спецификации совпадает', 'additional_info': quant_errors}
     else:
-        return {'message': 'Check quantity', 'additional_info': quant_errors}
+        return {'message': 'Требуется обратить внимание на количество товаров в спецификации', 'additional_info': quant_errors}
