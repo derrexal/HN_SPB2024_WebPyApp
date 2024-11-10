@@ -29,7 +29,7 @@ async def check_title(file: Annotated[bytes, File()], id: str):
     """Проверка наименования"""
     try:
         response = requests.get(
-            f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
+            f"http://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
         )
         data = json.loads(response.text)
         input_title = str(data["name"])
@@ -47,7 +47,7 @@ async def check_quantity(file: Annotated[bytes, File()], id: str):
     """
     try:
         response = requests.get(
-            f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
+            f"http://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
         )
         data = json.loads(response.text)
         product_items = data['items']
@@ -66,11 +66,11 @@ async def check_characteristic(file: Annotated[bytes, File()], id: str):
     try:
         product_items = []
 
-        response_auction_item = requests.get(f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}")
+        response_auction_item = requests.get(f"http://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}")
         data_auction_item = json.loads(response_auction_item.text)
         items = data_auction_item['items']
         for item in items:
-            response_additional_info = requests.get(f"https://zakupki.mos.ru/newapi/api/Auction/GetAuctionItemAdditionalInfo?itemId={item['id']}")
+            response_additional_info = requests.get(f"http://zakupki.mos.ru/newapi/api/Auction/GetAuctionItemAdditionalInfo?itemId={item['id']}")
             data_additional_info = json.loads(response_additional_info.text)
             product_items.append({'product_name': item['name'], 'properties': data_additional_info['characteristics']})
 
@@ -87,7 +87,7 @@ async def check_delivery(file: Annotated[bytes, File()], id: str):
     """
     try:
         response = requests.get(
-            f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
+            f"http://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
         )
         data = json.loads(response.text)
         product_items = data['deliveries']
@@ -101,7 +101,7 @@ async def check_photo(file: Annotated[bytes, File()], id: str):
     """Проверка фото"""
     try:
         response = requests.get(
-            f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
+            f"http://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
         )
         data = json.loads(response.text)
 
