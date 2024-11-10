@@ -96,6 +96,7 @@ async def check_delivery(file: Annotated[bytes, File()], id: str):
     except Exception as ex:
         print(ex)
 
+
 # если запустить на ноуте сони и немного допилить - будет работать
 @app.post("/api/check_photo")
 async def check_photo(file: Annotated[bytes, File()], id: str):
