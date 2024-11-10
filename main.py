@@ -2,7 +2,8 @@ import asyncio
 from typing import Annotated
 from fastapi import FastAPI, File
 import uvicorn
-from checks import check_if_text_in_docx, check_item_quantity, check_item_characteristics, check_delivery_dates
+from checks import check_if_text_in_docx, check_item_quantity, check_item_characteristics, check_delivery_dates, \
+    check_delivery_places
 
 import requests
 from fastapi.middleware.cors import CORSMiddleware
@@ -93,6 +94,24 @@ async def check_delivery(file: Annotated[bytes, File()], id: str):
         data = json.loads(response.text)
         product_items = data['deliveries']
         return check_delivery_dates(product_items, file)
+    except Exception as ex:
+        print(ex)
+
+
+
+@app.post("/api/check_delivery_address")
+async def check_delivery(file: Annotated[bytes, File()], id: str):
+    """
+    Проверка того, что количество товаров в КС
+    соответствует количеству в ТЗ
+    """
+    try:
+        response = requests.get(
+            f"http://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
+        )
+        data = json.loads(response.text)
+        product_items = data['deliveries']
+        return check_delivery_places(product_items, file)
     except Exception as ex:
         print(ex)
 

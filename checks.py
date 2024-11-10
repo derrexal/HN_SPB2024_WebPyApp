@@ -102,9 +102,10 @@ def check_item_characteristics(product_items: list, file_bytes: bytes):
     if docx_table is None:
         return {'message': 'Пожалуйста, загрузите файл формата docx', 'status': 2}  # 2 - плохо
 
-    char_errors = []
+    char_errors = {}
     doc_items = df_to_list_of_string(docx_table)
     for item in product_items:
+        item_errors = {}
         item_name = item['product_name']
         item_char = item['properties']
         text, score = process.extractOne(item_name, doc_items)
@@ -113,7 +114,8 @@ def check_item_characteristics(product_items: list, file_bytes: bytes):
             for ic in item_char:
                 char_score = fuzz.partial_ratio(str(ic) + ':', text)
                 if char_score < 60:
-                    char_errors.append((item_name, ic, item_char[ic]))
+                    # item_errors.append((ic, item_char[ic]))
+                    item_errors[item_name]['']
     #TODO: если нужно можем поделить len(quant_errors) на len(product_items) и получить score
     if len(char_errors) == 0:
         return {'message': 'Характеристики товаров спецификации совпадают', 'additional_info': char_errors}
@@ -143,3 +145,24 @@ def check_delivery_dates(product_items: list, file_bytes: bytes):
         return {'message': 'График поставки товаров спецификации совпадают', 'additional_info': delivery_errors}
     else:
         return {'message': 'Требуется обратить внимание на график поставки товаров в спецификации', 'additional_info': delivery_errors}
+
+def check_delivery_places(product_items: list, file_bytes: bytes):
+    docx_text = extract_text_from_docx(file_bytes)
+    # pipe = pipeline("question-answering", model="timpal0l/mdeberta-v3-base-squad2")
+    place_errors = []
+
+    for item in product_items:
+        for i in item["items"]:
+            item_name = i['name']
+            item_delivery_place = item['deliveryPlace']
+            # TODO: на случай чего оставил упрощенную версию проверки
+            # tz_delivery_dates = pipe('Какой график/срок поставки в днях?', docx_text)
+            place_score = fuzz.partial_ratio(item_delivery_place, docx_text)
+            # delivery_score = fuzz.partial_ratio(str(item_delivery_dates), tz_delivery_dates['answer'])
+            if place_score < 80:
+                place_errors.append((item_name, item_delivery_place))
+
+    if len(place_errors) == 0:
+        return {'message': 'График поставки товаров спецификации совпадают', 'additional_info': place_errors}
+    else:
+        return {'message': 'Требуется обратить внимание на график поставки товаров в спецификации', 'additional_info': place_errors}
