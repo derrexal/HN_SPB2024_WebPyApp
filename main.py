@@ -60,7 +60,7 @@ async def check_quantity(file: Annotated[bytes, File()], id: str):
 @app.post("/api/check_characteristic")
 async def check_characteristic(file: Annotated[bytes, File()], id: str):
     """
-    Проверка того, что количество товаров в КС
+    Проверка того, что количество характеристик в КС
     соответствует количеству в ТЗ
     """
     try:
@@ -90,7 +90,7 @@ async def check_delivery(file: Annotated[bytes, File()], id: str):
             f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
         )
         data = json.loads(response.text)
-        product_items = data['items']
+        product_items = data['deliveries']
         return check_delivery_dates(product_items, file)
     except Exception as ex:
         print(ex)

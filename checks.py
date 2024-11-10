@@ -1,10 +1,10 @@
 from const import message_ok, should_be_checked, mostly_correct
 from fuzzywuzzy import fuzz, process
-import pandas as pd
 
-from utils import get_verdict, fuzzy_sim, find_product_name, extract_table, extract_text_from_docx, \
+from utils import get_verdict, fuzzy_sim, extract_table, extract_text_from_docx, \
     retrieve_delivery_time, df_to_list_of_string
 
+from transformers import pipeline
 
 def check_delivery_address(pipe, text: str, docx_text: str, message: str):
     """
@@ -21,7 +21,7 @@ def check_delivery_address(pipe, text: str, docx_text: str, message: str):
         return {'plausibility': score, 'message': should_be_checked}
 
 
-def check_if_text_in_docx(text: str, file_bytes: list[int]):
+def check_if_text_in_docx(text: str, file_bytes: bytes):
     """
     Ищет в тексте `docx_text` поданный текст.
     Возвращает Ok, если совпадение больше или равно 90,
@@ -36,7 +36,6 @@ def check_if_text_in_docx(text: str, file_bytes: list[int]):
     return {'plausibility': score, 'message': f'Наименование совпадает на {score} %'}
 
 
-
 def check_if_products_in_docx(items: list[str], file_bytes: bytes) -> str:
     """Возвращает Ок, если все товары совпали."""
     data = extract_table(file_bytes)
@@ -45,29 +44,29 @@ def check_if_products_in_docx(items: list[str], file_bytes: bytes) -> str:
     if all(data['verdict'] == 'Ok'):
         return message_ok
     elif any(90 > data['verdict'] >= 70):
-        return mostly_correct
+        return 'Товары совпали'
     else:
-        return should_be_checked
+        return 'Требуется обратить внимание на характеристики товара'
 
-
-def check_if_quantity_in_docx(product_items: list, data: pd.DataFrame):
-    """Возвращает Ок, если все характеристики совпали."""
-    for pi in product_items:
-        item_title = pi['title']
-        item_quantity = pi['quantity'].split(' ')[0]
-        item_unit_metric = pi['quantity'].split(' ')[1]
-        print(pi['quantity'].split(' '))
-        
-        df_item = find_product_name(item_title, data).reset_index(drop=True)
-        quant_correct = df_item.loc[0, 'Кол-во'] == item_quantity
-        metric_correct = fuzzy_sim(item_unit_metric.lower(), df_item.loc[0, 'Ед. изм.'].lower()) >= 90
-        print('[INFO] Quant correct: ', quant_correct)
-        print('[INFO] Metric correct: ', metric_correct)
-
-        if quant_correct:
-            return message_ok
-        else:
-            return should_be_checked
+# Not Using
+# def check_if_quantity_in_docx(product_items: list, data: pd.DataFrame):
+#     """Возвращает Ок, если все характеристики совпали."""
+#     for pi in product_items:
+#         item_title = pi['title']
+#         item_quantity = pi['quantity'].split(' ')[0]
+#         item_unit_metric = pi['quantity'].split(' ')[1]
+#         print(pi['quantity'].split(' '))
+#
+#         df_item = find_product_name(item_title, data).reset_index(drop=True)
+#         quant_correct = df_item.loc[0, 'Кол-во'] == item_quantity
+#         metric_correct = fuzzy_sim(item_unit_metric.lower(), df_item.loc[0, 'Ед. изм.'].lower()) >= 90
+#         print('[INFO] Quant correct: ', quant_correct)
+#         print('[INFO] Metric correct: ', metric_correct)
+#
+#         if quant_correct:
+#             return 'Характеристики совпали'
+#         else:
+#             return 'Требуется обратить внимание на характеристики товара'
 
 
 def check_item_quantity(product_items: list, file_bytes: bytes):
@@ -79,10 +78,10 @@ def check_item_quantity(product_items: list, file_bytes: bytes):
         item_name = item['name']
         item_quant = str(item['currentValue']) + ' ' + item['okeiName']
         text, score = process.extractOne(item_name, doc_items)
-        quant_score = fuzz.partial_ratio(item_quant.lower(), text)
+        quant_score = fuzz.partial_ratio(item_quant.lower(), text.lower())
         if quant_score <= 70:
             quant_errors.append((item_name, item_quant))
-
+    #TODO: если нужно можем поделить len(quant_errors) на len(product_items) и получить score
     if len(quant_errors) == 0:
         return {'message': 'Количество товаров спецификации совпадает', 'additional_info': quant_errors}
     else:
@@ -103,7 +102,7 @@ def check_item_characteristics(product_items: list, file_bytes: bytes):
                 char_score = fuzz.partial_ratio(str(ic) + ':', text)
                 if char_score < 60:
                     char_errors.append((item_name, ic, item_char[ic]))
-
+    #TODO: если нужно можем поделить len(quant_errors) на len(product_items) и получить score
     if len(char_errors) == 0:
         return {'message': 'Характеристики товаров спецификации совпадают', 'additional_info': char_errors}
     else:
@@ -112,15 +111,19 @@ def check_item_characteristics(product_items: list, file_bytes: bytes):
 
 def check_delivery_dates(product_items: list, file_bytes: bytes):
     docx_text = extract_text_from_docx(file_bytes)
+    pipe = pipeline("question-answering", model="timpal0l/mdeberta-v3-base-squad2")
     delivery_errors = []
+
     for item in product_items:
-        item_name = item['name']
-        item_delivery_dates = item['deliveryDates']
-        # tz_delivery_dates = pipe('Какой график поставки?', docx_text)
-        # score = fuzz.partial_ratio(item_delivery_dates, tz_delivery_dates)
-        delivery_score = fuzz.partial_ratio(item_delivery_dates, docx_text)
-        if delivery_score < 80:
-            delivery_errors.append((item_name, item_delivery_dates))
+        for i in item["items"]:
+            item_name = i['name']
+            item_delivery_dates = item['periodDaysTo']
+            # TODO: на случай чего оставил упрощенную версию проверки
+            tz_delivery_dates = pipe('Какой график/срок поставки в днях?', docx_text)
+            # score = fuzz.partial_ratio(item_delivery_dates, tz_delivery_dates)
+            delivery_score = fuzz.partial_ratio(str(item_delivery_dates), tz_delivery_dates['answer'])
+            if delivery_score < 80:
+                delivery_errors.append((item_name, tz_delivery_dates))
 
     if len(delivery_errors) == 0:
         return {'message': 'График поставки товаров спецификации совпадают', 'additional_info': delivery_errors}

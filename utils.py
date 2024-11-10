@@ -40,9 +40,9 @@ def extract_table(file_bytes: bytes, table_num: int = 0) -> pd.DataFrame:
         return df
 
 
-def extract_tables(path_to_doc: str | bytes) -> pd.DataFrame:
+def extract_tables(file_bytes: bytes) -> pd.DataFrame:
     """Return Table from DOCX file format as DataFrame"""
-    doc = Document(path_to_doc)
+    doc = Document(BytesIO(bytearray(file_bytes)))
     table_count = len(doc.tables)
 
     if len(doc.tables) < 0:
