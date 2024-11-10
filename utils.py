@@ -12,10 +12,9 @@ def retrieve_delivery_time(pipe: pipeline, context: str) -> dict:
     return pipe(question='Какой срок поставки товара?', context=context)
 
 
-def extract_table(file_bytes: str, table_num: int = 0) -> pd.DataFrame:
+def extract_table(file_bytes: bytes, table_num: int = 0) -> pd.DataFrame:
     """Return Table from DOCX file format as DataFrame"""
-    with open(file_bytes, 'rb') as f:
-        doc = Document(f)
+    doc = Document(BytesIO(bytearray(file_bytes)))
     table_count = len(doc.tables)
     if table_num >= table_count:
         raise BaseException('The count of tables is less than `table_num` argument')

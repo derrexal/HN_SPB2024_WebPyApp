@@ -34,7 +34,6 @@ async def check_title(file: Annotated[bytes, File()], id: str):
             f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
         )
         data = json.loads(response.text)
-        print(data)
         input_title = str(data["name"])
         return check_if_text_in_docx(input_title, file)
     except Exception as ex:
@@ -42,15 +41,18 @@ async def check_title(file: Annotated[bytes, File()], id: str):
 
 
 @app.post("/api/check_quantity")
-async def check_quantity(data=Body()):
+async def check_quantity(file: Annotated[bytes, File()], id: str):
     """
     Проверка того, что количество товаров в КС
     соответствует количеству в ТЗ
     """
     try:
-        product_items = data['specifications']
-        file_bytes = data["file"]["buffer"]["data"]
-        return check_item_quantity(product_items, file_bytes, "Проверка количества товаров выполнена успешно")
+        response = requests.get(
+            f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
+        )
+        data = json.loads(response.text)
+        product_items = data['items']
+        return check_item_quantity(product_items, file)
     except Exception as ex:
         print(ex)
 

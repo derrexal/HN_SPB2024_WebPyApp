@@ -37,7 +37,7 @@ def check_if_text_in_docx(text: str, file_bytes: list[int]):
 
 
 
-def check_if_products_in_docx(items: list[str], file_bytes: str) -> str:
+def check_if_products_in_docx(items: list[str], file_bytes: bytes) -> str:
     """Возвращает Ок, если все товары совпали."""
     data = extract_table(file_bytes)
     data['score'] = data['Наименование товара'].apply(lambda x: process.extractOne(x, items)[1])
@@ -70,20 +70,20 @@ def check_if_quantity_in_docx(product_items: list, data: pd.DataFrame):
             return should_be_checked
 
 
-def check_item_quantity(product_items: list, file_bytes: str):
+def check_item_quantity(product_items: list, file_bytes: bytes):
     """"""
     docx_table = extract_table(file_bytes, 0)
     quant_errors = []
     doc_items = df_to_list_of_string(docx_table)
     for item in product_items:
-        item_name = item['title']
-        item_quant = item['quantity']
+        item_name = item['name']
+        item_quant = str(item['currentValue']) + ' ' + item['okeiName']
         text, score = process.extractOne(item_name, doc_items)
         quant_score = fuzz.partial_ratio(item_quant.lower(), text)
         if quant_score <= 70:
             quant_errors.append((item_name, item_quant))
 
     if len(quant_errors) == 0:
-        return {'message': 'Количество товаров и характеристик в спецификации совпадает', 'additional_info': quant_errors}
+        return {'message': 'Количество товаров спецификации совпадает', 'additional_info': quant_errors}
     else:
         return {'message': 'Требуется обратить внимание на количество товаров в спецификации', 'additional_info': quant_errors}
