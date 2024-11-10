@@ -2,7 +2,8 @@ from const import message_ok, should_be_checked, mostly_correct
 from fuzzywuzzy import fuzz, process
 import pandas as pd
 
-from utils import get_verdict, fuzzy_sim, find_product_name, extract_table, extract_text_from_docx, retrieve_delivery_time
+from utils import get_verdict, fuzzy_sim, find_product_name, extract_table, extract_text_from_docx, \
+    retrieve_delivery_time, df_to_list_of_string
 
 
 def check_delivery_address(pipe, text: str, docx_text: str, message: str):
@@ -70,4 +71,21 @@ def check_if_quantity_in_docx(product_items: list, data: pd.DataFrame):
             return message_ok
         else:
             return should_be_checked
-        
+
+
+def check_item_quantity(product_items: list, file_bytes: str):
+    docx_table = extract_table(file_bytes, 0)
+    quant_errors = []
+    doc_items = df_to_list_of_string(docx_table)
+    for item in product_items:
+        item_name = item['title']
+        item_quant = item['quantity']
+        text, score = process.extractOne(item_name, doc_items)
+        quant_score = fuzz.partial_ratio(item_quant.lower(), text)
+        if quant_score <= 70:
+            quant_errors.append((item_name, item_quant))
+
+    if len(quant_errors) == 0:
+        return {'message': 'Ok', 'additional_info': quant_errors}
+    else:
+        return {'message': 'Check quantity', 'additional_info': quant_errors}

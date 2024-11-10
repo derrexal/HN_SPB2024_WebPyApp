@@ -115,3 +115,7 @@ def extract_text_from_docx(docx_file: list[int]):
         full_text.append(para.text)
 
     return ' '.join(full_text)
+
+
+def df_to_list_of_string(data):
+    return data.apply(lambda row: ' '.join(row.astype(str)), axis=1).to_list()
