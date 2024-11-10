@@ -2,7 +2,7 @@ import asyncio
 from typing import Annotated
 from fastapi import FastAPI, File
 import uvicorn
-from checks import check_if_text_in_docx, check_item_quantity, check_item_characteristics
+from checks import check_if_text_in_docx, check_item_quantity, check_item_characteristics, check_delivery_dates
 
 # from transformers import pipeline
 import requests
@@ -75,6 +75,23 @@ async def check_characteristic(file: Annotated[bytes, File()], id: str):
             product_items.append({'product_name': item['name'], 'properties': data_additional_info['characteristics']})
 
         return check_item_characteristics(product_items, file)
+    except Exception as ex:
+        print(ex)
+
+
+@app.post("/api/check_delivery_dates")
+async def check_delivery(file: Annotated[bytes, File()], id: str):
+    """
+    Проверка того, что количество товаров в КС
+    соответствует количеству в ТЗ
+    """
+    try:
+        response = requests.get(
+            f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
+        )
+        data = json.loads(response.text)
+        product_items = data['items']
+        return check_delivery_dates(product_items, file)
     except Exception as ex:
         print(ex)
 

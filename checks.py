@@ -108,3 +108,21 @@ def check_item_characteristics(product_items: list, file_bytes: bytes):
         return {'message': 'Характеристики товаров спецификации совпадают', 'additional_info': char_errors}
     else:
         return {'message': 'Требуется обратить внимание на характеристики товаров в спецификации', 'additional_info': char_errors}
+
+
+def check_delivery_dates(product_items: list, file_bytes: bytes):
+    docx_text = extract_text_from_docx(file_bytes)
+    delivery_errors = []
+    for item in product_items:
+        item_name = item['name']
+        item_delivery_dates = item['deliveryDates']
+        # tz_delivery_dates = pipe('Какой график поставки?', docx_text)
+        # score = fuzz.partial_ratio(item_delivery_dates, tz_delivery_dates)
+        delivery_score = fuzz.partial_ratio(item_delivery_dates, docx_text)
+        if delivery_score < 80:
+            delivery_errors.append((item_name, item_delivery_dates))
+
+    if len(delivery_errors) == 0:
+        return {'message': 'График поставки товаров спецификации совпадают', 'additional_info': delivery_errors}
+    else:
+        return {'message': 'Требуется обратить внимание на график поставки товаров в спецификации', 'additional_info': delivery_errors}

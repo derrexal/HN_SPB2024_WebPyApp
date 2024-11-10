@@ -37,7 +37,38 @@ def extract_table(file_bytes: bytes, table_num: int = 0) -> pd.DataFrame:
         df.columns = df.iloc[0]
         df = df[1:]
         
-        return(df)
+        return df
+
+
+def extract_tables(path_to_doc: str | bytes) -> pd.DataFrame:
+    """Return Table from DOCX file format as DataFrame"""
+    doc = Document(path_to_doc)
+    table_count = len(doc.tables)
+
+    if len(doc.tables) < 0:
+        return None
+
+    tables = []
+    for i in range(table_count):
+        first_table = doc.tables[i]
+
+        # Extract the table data into a list of lists
+        table_data = []
+        for row in first_table.rows:
+            row_data = []
+            for cell in row.cells:
+                row_data.append(cell.text)
+            table_data.append(row_data)
+
+        # Convert the list of lists into a Pandas DataFrame
+        df = pd.DataFrame(table_data)
+
+        # Optionally, set the first row as the header
+        df.columns = df.iloc[0]
+        df = df[1:]
+
+        tables.append(df)
+    return tables
 
 
 def compare_item_names(web_card: json, doc_df: pd.DataFrame) -> list:
@@ -107,13 +138,17 @@ def get_verdict(x: int):
         return should_be_checked
 
 
-def extract_text_from_docx(docx_file: list[int]):
+def extract_text_from_docx(docx_file: list[int] | bytes):
     doc = Document(BytesIO(bytearray(docx_file)))
     full_text = []
     for para in doc.paragraphs:
         full_text.append(para.text)
 
-    return ' '.join(full_text)
+    text = ' '.join(full_text)
+    tables = extract_tables(docx_file)
+    tables_str = ["\n".join(df_to_list_of_string(table)) for table in tables]
+
+    return text + "\n".join(tables_str)
 
 
 def df_to_list_of_string(data):
