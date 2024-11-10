@@ -2,7 +2,9 @@ import asyncio
 from fastapi import FastAPI, Body
 import uvicorn
 from app import *
-from checks import check_if_text_in_docx
+from checks import check_if_text_in_docx, check_item_quantity
+
+# from transformers import pipeline
 # from ruclip_check_photo import check_photo_function
 
 app = FastAPI()
@@ -20,6 +22,20 @@ async def check_title(data=Body()):
         input_title = str(data["title"])
         file_bytes = data["file"]["buffer"]["data"]
         return check_if_text_in_docx(input_title, file_bytes)
+    except Exception as ex:
+        print(ex)
+
+
+@app.post("/api/check_quantity")
+async def check_quantity(data=Body()):
+    """
+    Проверка того, что количество товаров в КС
+    соответствует количеству в ТЗ
+    """
+    try:
+        product_items = data['specifications']
+        file_bytes = data["file"]["buffer"]["data"]
+        return check_item_quantity(product_items, file_bytes, "Проверка количества товаров выполнена успешно")
     except Exception as ex:
         print(ex)
 
