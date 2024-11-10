@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import FastAPI, File, Body
 import uvicorn
 from app import *
-from checks import check_if_text_in_docx, check_item_quantity
+from checks import check_if_text_in_docx, check_item_quantity, check_item_characteristics
 
 # from transformers import pipeline
 import requests
@@ -69,7 +69,7 @@ async def check_characteristic(file: Annotated[bytes, File()], id: str):
         )
         data = json.loads(response.text)
         product_items = data['items']
-        return check_item_quantity(product_items, file)
+        return check_item_characteristics(product_items, file)
     except Exception as ex:
         print(ex)
 

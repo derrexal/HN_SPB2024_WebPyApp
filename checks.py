@@ -87,3 +87,22 @@ def check_item_quantity(product_items: list, file_bytes: bytes):
         return {'message': 'Количество товаров спецификации совпадает', 'additional_info': quant_errors}
     else:
         return {'message': 'Требуется обратить внимание на количество товаров в спецификации', 'additional_info': quant_errors}
+
+
+def check_item_characteristics(product_items: list, file_bytes: bytes):
+    docx_table = extract_table(file_bytes, 0)
+    char_errors = []
+    doc_items = df_to_list_of_string(docx_table)
+    for item in product_items:
+        item_name = item['name']
+        item_char = item['properties']
+        text, score = process.extractOne(item_name, doc_items)
+        for ic in item_char:
+            char_score = fuzz.partial_ratio(str(ic) + ' - ' + str(item_char[ic]), text)
+            if char_score < 80:
+                char_errors.append((item_name, ic, item_char[ic]))
+
+    if len(char_errors) == 0:
+        return {'message': 'Характеристики товаров спецификации совпадают', 'additional_info': char_errors}
+    else:
+        return {'message': 'Требуется обратить внимание на характеристики товаров в спецификации', 'additional_info': char_errors}
