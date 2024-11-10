@@ -1,8 +1,7 @@
 import asyncio
 from typing import Annotated
-from fastapi import FastAPI, File, Body
+from fastapi import FastAPI, File
 import uvicorn
-from app import *
 from checks import check_if_text_in_docx, check_item_quantity, check_item_characteristics
 
 # from transformers import pipeline
@@ -20,12 +19,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/api/")
 async def default_endpoint():
     return "Hello, i'm python web app"
 
-
+# worked
 @app.post("/api/check_title")
 async def check_title(file: Annotated[bytes, File()], id: str):
     """Проверка наименования"""
@@ -40,6 +38,7 @@ async def check_title(file: Annotated[bytes, File()], id: str):
         print(ex)
 
 
+# worked
 @app.post("/api/check_quantity")
 async def check_quantity(file: Annotated[bytes, File()], id: str):
     """
@@ -57,6 +56,7 @@ async def check_quantity(file: Annotated[bytes, File()], id: str):
         print(ex)
 
 
+# worked
 @app.post("/api/check_characteristic")
 async def check_characteristic(file: Annotated[bytes, File()], id: str):
     """
@@ -64,31 +64,21 @@ async def check_characteristic(file: Annotated[bytes, File()], id: str):
     соответствует количеству в ТЗ
     """
     try:
-        response = requests.get(
-            f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
-        )
-        data = json.loads(response.text)
-        product_items = data['items']
+        product_items = []
+
+        response_auction_item = requests.get(f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}")
+        data_auction_item = json.loads(response_auction_item.text)
+        items = data_auction_item['items']
+        for item in items:
+            response_additional_info = requests.get(f"https://zakupki.mos.ru/newapi/api/Auction/GetAuctionItemAdditionalInfo?itemId={item['id']}")
+            data_additional_info = json.loads(response_additional_info.text)
+            product_items.append({'product_name': item['name'], 'properties': data_additional_info['characteristics']})
+
         return check_item_characteristics(product_items, file)
     except Exception as ex:
         print(ex)
 
-
-@app.post("/api/check_contract_enforced")
-async def check_contract_enforced(file: Annotated[bytes, File()], id: str):
-    """Проверка обеспечения исполнения контракта"""
-    try:
-        response = requests.get(
-            f"https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId={id}"
-        )
-        data = json.loads(response.text)
-
-        contract_enforced = str(data["isContractGuaranteeRequired"])
-        return check_contract_enforced_function(contract_enforced)
-    except Exception as ex:
-        print(ex)
-
-
+# если запустить на ноуте сони и немного допилить - будет работать
 @app.post("/api/check_photo")
 async def check_photo(file: Annotated[bytes, File()], id: str):
     """Проверка фото"""
@@ -98,8 +88,8 @@ async def check_photo(file: Annotated[bytes, File()], id: str):
         )
         data = json.loads(response.text)
 
-        photo_url = str(data["auctionItem"])
-        return check_photo_function(photo_url)
+        image_id = str(data["imageId"]) #TODO: доделать адрес, Артем знает какой. Это только айдишник(Формат урла одинаковый - нужно только вставить image_id)
+        # return check_photo_function(photo_url) # TODO: тут использовать функцию Сони - она знает какую. (сейчас закоменченый модуль)
     except Exception as ex:
         print(ex)
 

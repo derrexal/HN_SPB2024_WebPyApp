@@ -71,7 +71,7 @@ def check_if_quantity_in_docx(product_items: list, data: pd.DataFrame):
 
 
 def check_item_quantity(product_items: list, file_bytes: bytes):
-    """"""
+    """Проверяет """
     docx_table = extract_table(file_bytes, 0)
     quant_errors = []
     doc_items = df_to_list_of_string(docx_table)
@@ -94,13 +94,15 @@ def check_item_characteristics(product_items: list, file_bytes: bytes):
     char_errors = []
     doc_items = df_to_list_of_string(docx_table)
     for item in product_items:
-        item_name = item['name']
+        item_name = item['product_name']
         item_char = item['properties']
         text, score = process.extractOne(item_name, doc_items)
-        for ic in item_char:
-            char_score = fuzz.partial_ratio(str(ic) + ' - ' + str(item_char[ic]), text)
-            if char_score < 80:
-                char_errors.append((item_name, ic, item_char[ic]))
+        item_chars = [{d['name']: d['value']} for d in item_char]
+        for item_char in item_chars:
+            for ic in item_char:
+                char_score = fuzz.partial_ratio(str(ic) + ':', text)
+                if char_score < 60:
+                    char_errors.append((item_name, ic, item_char[ic]))
 
     if len(char_errors) == 0:
         return {'message': 'Характеристики товаров спецификации совпадают', 'additional_info': char_errors}
