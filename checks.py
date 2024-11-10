@@ -2,14 +2,13 @@ from const import message_ok, should_be_checked, mostly_correct
 from fuzzywuzzy import fuzz, process
 
 from utils import get_verdict, fuzzy_sim, extract_table, extract_text_from_docx, \
-    retrieve_delivery_time, df_to_list_of_string
+    retrieve_delivery_time, df_to_list_of_string, save_as_doc
 
 from transformers import pipeline
 
 def check_delivery_address(pipe, text: str, docx_text: str, message: str):
     """
-    Возвращает Ок, если График поставки в основном совпадает
-    с информацией в ТЗ.
+    Возвращает Ок, если График поставки в основном совпадает с информацией в ТЗ.
     """
     answer = retrieve_delivery_time(pipe, docx_text)['answer']
     score = fuzzy_sim(text, answer)
@@ -31,6 +30,8 @@ def check_if_text_in_docx(text: str, file_bytes: bytes):
     Проверяется название КС в ТЗ и адрес в ТЗ
     """
     docx_text = extract_text_from_docx(file_bytes)
+    if docx_text == "":
+        docx_text = save_as_doc(file_bytes)
     score = fuzz.partial_ratio(text.lower(), docx_text)
 
     return {'plausibility': score, 'message': f'Наименование совпадает на {score} %'}
@@ -47,6 +48,7 @@ def check_if_products_in_docx(items: list[str], file_bytes: bytes) -> str:
         return 'Товары совпали'
     else:
         return 'Требуется обратить внимание на характеристики товара'
+
 
 # Not Using
 # def check_if_quantity_in_docx(product_items: list, data: pd.DataFrame):
@@ -72,6 +74,8 @@ def check_if_products_in_docx(items: list[str], file_bytes: bytes) -> str:
 def check_item_quantity(product_items: list, file_bytes: bytes):
     """Проверяет """
     docx_table = extract_table(file_bytes, 0)
+    if docx_table == "":
+        return {'message': 'Пожалуйста, загрузите файл формата docx', 'status': 2} # 2 - плохо
     quant_errors = []
     doc_items = df_to_list_of_string(docx_table)
     for item in product_items:
@@ -90,6 +94,8 @@ def check_item_quantity(product_items: list, file_bytes: bytes):
 
 def check_item_characteristics(product_items: list, file_bytes: bytes):
     docx_table = extract_table(file_bytes, 0)
+    if docx_table == "":
+        return {'message': 'Пожалуйста, загрузите файл формата docx', 'status': 2}
     char_errors = []
     doc_items = df_to_list_of_string(docx_table)
     for item in product_items:
@@ -111,6 +117,8 @@ def check_item_characteristics(product_items: list, file_bytes: bytes):
 
 def check_delivery_dates(product_items: list, file_bytes: bytes):
     docx_text = extract_text_from_docx(file_bytes)
+    if docx_text == "":
+        docx_text = save_as_doc(file_bytes)
     pipe = pipeline("question-answering", model="timpal0l/mdeberta-v3-base-squad2")
     delivery_errors = []
 

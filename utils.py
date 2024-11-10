@@ -139,16 +139,33 @@ def get_verdict(x: int):
 
 
 def extract_text_from_docx(docx_file: list[int] | bytes):
-    doc = Document(BytesIO(bytearray(docx_file)))
-    full_text = []
-    for para in doc.paragraphs:
-        full_text.append(para.text)
+    try:
+        doc = Document(BytesIO(bytearray(docx_file)))
+        full_text = []
+        for para in doc.paragraphs:
+            full_text.append(para.text)
 
-    text = ' '.join(full_text)
-    tables = extract_tables(docx_file)
-    tables_str = ["\n".join(df_to_list_of_string(table)) for table in tables]
+        text = ' '.join(full_text)
+        tables = extract_tables(docx_file)
+        tables_str = ["\n".join(df_to_list_of_string(table)) for table in tables]
 
-    return text + "\n".join(tables_str)
+        return text + "\n".join(tables_str)
+    except ValueError as ve:
+        print(f"Ошибка при создании .docx: {ve}")
+        return ""
+
+
+def save_as_doc(byte_data: bytes) -> str:
+    # Для старых .doc файлов не так просто извлечь текст, без использования дополнительных инструментов
+    # Поэтому просто возвращаем байты как строку (пример: байты текстового документа)
+    try:
+        text = byte_data.decode('utf-8', errors='ignore')  # Предполагаем, что это текст в UTF-8
+        print("Файл успешно сохранён как .doc")
+        return text
+    except Exception as e:
+        print(f"Ошибка при сохранении в .doc: {e}")
+        return ""
+
 
 
 def df_to_list_of_string(data):

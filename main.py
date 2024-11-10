@@ -4,7 +4,6 @@ from fastapi import FastAPI, File
 import uvicorn
 from checks import check_if_text_in_docx, check_item_quantity, check_item_characteristics, check_delivery_dates
 
-# from transformers import pipeline
 import requests
 from fastapi.middleware.cors import CORSMiddleware
 import json
@@ -19,9 +18,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/api/")
 async def default_endpoint():
     return "Hello, i'm python web app"
+
 
 # worked
 @app.post("/api/check_title")
